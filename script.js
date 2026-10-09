@@ -8,7 +8,7 @@ async function obtenerPokemon(nombre) {
     const tarjetaHTML = mostrarPokemonCard(datos);
     document.getElementById("resultadoBusqueda").innerHTML = tarjetaHTML;
   } catch (error) {
-    console.log("personaje no encontrado", error.message);
+    console.log("Pokémon no encontrado", error.message);
   }
 }
 obtenerPokemon();
