@@ -201,3 +201,128 @@ document.getElementById("btnLimpiar").addEventListener("click", () => {
 // Cargar favoritos al abrir la página y mostrar Pikachu por defecto
 mostrarListaFavoritos();
 obtenerPokemon("pikachu");
+
+// 1. Referencias a los elementos del DOM (ajusta los selectores según tu HTML)
+const searchInput = document.getElementById('search-input');
+const btnSearch = document.getElementById('btn-search');
+const btnClear = document.getElementById('btn-clear');
+const resultsContainer = document.getElementById('results-container');
+const favoritesContainer = document.getElementById('favorites-container');
+
+// Cargar favoritos guardados al iniciar la página
+document.addEventListener('DOMContentLoaded', renderFavorites);
+
+
+// ==========================================
+// 1. BOTÓN BUSCAR
+// ==========================================
+btnSearch.addEventListener('click', async () => {
+    const pokemonNameOrId = searchInput.value.trim().toLowerCase();
+    
+    if (!pokemonNameOrId) {
+        alert('Por favor, ingresa el nombre o ID de un Pokémon.');
+        return;
+    }
+
+    try {
+        // Llamar a la PokeAPI
+        const response = await fetch(`https://pokeapi.co/api/v2/pokemon/${pokemonNameOrId}`);
+        
+        if (!response.ok) {
+            throw new Error('Pokémon no encontrado');
+        }
+        
+        const pokemonData = await response.json();
+        
+        // Crear y mostrar la tarjeta en el contenedor de resultados
+        resultsContainer.innerHTML = ''; // Limpiar búsqueda anterior si deseas mostrar solo de a uno
+        const card = createPokemonCard(pokemonData, 'search');
+        resultsContainer.appendChild(card);
+
+    } catch (error) {
+        resultsContainer.innerHTML = `<p style="color: red;">${error.message}</p>`;
+    }
+});
+
+
+// ==========================================
+// 2. BOTÓN LIMPIAR
+// ==========================================
+btnClear.addEventListener('click', () => {
+    searchInput.value = '';
+    resultsContainer.innerHTML = '';
+});
+
+
+// ==========================================
+// FUNCIÓN PARA CREAR TARJETAS (Auxiliar)
+// ==========================================
+function createPokemonCard(pokemon, type) {
+    const card = document.createElement('div');
+    card.classList.add('pokemon-card');
+    card.dataset.id = pokemon.id;
+
+    card.innerHTML = `
+        <img src="${pokemon.sprites.front_default}" alt="${pokemon.name}">
+        <h3>${pokemon.name.toUpperCase()}</h3>
+        <p>ID: ${pokemon.id}</p>
+        ${type === 'search' 
+            ? `<button class="btn-favorite">Agregar a favoritos ⭐</button>` 
+            : `<button class="btn-delete">Eliminar ❌</button>`
+        }
+    `;
+
+    // ==========================================
+    // 3. BOTÓN AGREGAR A FAVORITOS
+    // ==========================================
+    if (type === 'search') {
+        const btnFavorite = card.querySelector('.btn-favorite');
+        btnFavorite.addEventListener('click', () => {
+            let favorites = JSON.parse(localStorage.getItem('favorites')) || [];
+            
+            // Evitar duplicados
+            const exists = favorites.some(fav => fav.id === pokemon.id);
+            if (!exists) {
+                favorites.push(pokemon);
+                localStorage.setItem('favorites', JSON.stringify(favorites));
+                renderFavorites();
+                alert(`${pokemon.name} agregado a favoritos.`);
+            } else {
+                alert('Este Pokémon ya está en tus favoritos.');
+            }
+        });
+    }
+
+    // ==========================================
+    // 4. BOTÓN ELIMINAR (De favoritos)
+    // ==========================================
+    if (type === 'favorite') {
+        const btnDelete = card.querySelector('.btn-delete');
+        btnDelete.addEventListener('click', () => {
+            let favorites = JSON.parse(localStorage.getItem('favorites')) || [];
+            
+            // Filtrar para remover el Pokémon del arreglo
+            favorites = favorites.filter(fav => fav.id !== pokemon.id);
+            localStorage.setItem('favorites', JSON.stringify(favorites));
+            
+            // Quitar su tarjeta del DOM directamente
+            card.remove();
+        });
+    }
+
+    return card;
+}
+
+
+// ==========================================
+// RENDERIZAR FAVORITOS DESDE LOCALSTORAGE
+// ==========================================
+function renderFavorites() {
+    favoritesContainer.innerHTML = '';
+    const favorites = JSON.parse(localStorage.getItem('favorites')) || [];
+
+    favorites.forEach(pokemon => {
+        const card = createPokemonCard(pokemon, 'favorite');
+        favoritesContainer.appendChild(card);
+    });
+}
