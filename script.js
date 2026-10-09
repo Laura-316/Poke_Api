@@ -13,6 +13,7 @@ async function obtenerPokemon(nombre) {
 }
 obtenerPokemon();
 
+/* Tarea 3: Crear la tarjeta del Pokémon (Evelyn)*/
 function mostrarPokemonCard(pokemon) {
   const ataque = pokemon.stats[1].base_stat;
   const defensa = pokemon.stats[2].base_stat;
@@ -31,3 +32,5 @@ function mostrarPokemonCard(pokemon) {
 }
 
 obtenerPokemon("pikachu");
+
+/* ------------------------ */
